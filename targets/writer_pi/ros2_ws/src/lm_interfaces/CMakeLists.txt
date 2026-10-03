@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.8)
+project(lm_interfaces)
+find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+file(GLOB MSGS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} msg/*.msg)
+rosidl_generate_interfaces(${PROJECT_NAME} ${MSGS})
+ament_export_dependencies(rosidl_default_runtime)
+ament_package()

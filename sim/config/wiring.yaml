@@ -1,0 +1,18 @@
+# The graph. Topics are implicit from each module's INPUTS/OUTPUTS;
+# the runner validates types + zone rules at load. Swap impl: for HW drivers.
+dt: 0.1
+duration_s: 120
+modules:
+  - {name: fsm,        impl: modules.strategy.mission_fsm.MissionFSM, params: {explore_s: 40, execute_s: 5}}
+  - {name: pose,       impl: modules.writer.sim_pose.SimPose,        params: {seed: 0, drift_sigma: 0.002}}
+  - {name: s1_fire,    impl: modules.writer.sensor.SimScalarSensor,  params: {type: FIRE, noise: 0.05, seed: 1}}
+  - {name: s3_gas,     impl: modules.writer.sensor.SimScalarSensor,  params: {type: GAS,  noise: 0.08, seed: 3}}
+  - {name: fusion,     impl: modules.writer.fusion.Fusion,           params: {k: 3, n: 5, thresh: 0.5, dedupe_r: 2.0}}
+  - {name: triage,     impl: modules.writer.triage.Triage}
+  - {name: drop,       impl: modules.writer.drop_policy.DropPolicy,  params: {d_max: 4.0}}
+  - {name: bwriter,    impl: modules.writer.beacon_writer.BeaconWriter}
+  - {name: beacons,    impl: modules.beacon.beacon_field.BeaconField}
+  - {name: ona_tr,     impl: modules.ona.ona.Translate,              params: {heading_deg: 30, entrance_lat: 36.8430, entrance_lon: 10.1970}}
+  - {name: cp,         impl: modules.cp.command_post.CommandPost}
+  - {name: ona_brief,  impl: modules.ona.ona.BriefOut}
+  - {name: executor,   impl: modules.executor.executor.Executor,     params: {fresh_s: 30, stale_s: 20}}

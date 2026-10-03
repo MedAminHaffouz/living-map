@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+targets/writer_pi/ros2_ws/build/
+targets/writer_pi/ros2_ws/install/
+targets/writer_pi/ros2_ws/log/
+.pio/
+*.o

@@ -1,0 +1,94 @@
+# SINGLE SOURCE OF TRUTH for every message that crosses a physical link.
+# Edit here, then `make gen`. Never hand-edit contracts/generated/.
+# types: u8 i8 u16 i16 u32 i32 f32   (little-endian, packed)
+# links: uart_writer (STM<->Pi), uart_exec (STM<->radio ESP), espnow (radio air), usb_ona (radio ESP<->ONA PC)
+
+enums:
+  EventType: {NONE: 0, FIRE: 1, GAS: 2, PERSON: 3, JUNCTION: 4, SMOKE: 5}
+  Priority:  {IGNORE: 0, LOW: 1, NORMAL: 2, HIGH: 3, IMMEDIATE: 4}
+  AgeState:  {FRESH: 0, AGING: 1, STALE: 2, SUSPECT: 3}
+  Action:    {NONE: 0, GOTO: 1, VERIFY: 2, EXTINGUISH: 3, FIRST_AID: 4}
+  Result:    {OK: 0, FAIL: 1, ABORTED: 2, BLOCKED: 3}
+  NodeId:    {WRITER: 1, EXECUTOR: 2, ONA: 3, CP: 4, BEACON: 5}
+  CalibOp:   {ZERO_BASELINE: 1, IMU_BIAS: 2, ENCODER_RESET: 3}
+
+messages:
+  Heartbeat:
+    id: 0x01
+    links: [uart_writer, uart_exec, usb_ona]
+    fields: {src: u8/NodeId, state: u8, t_ms: u32}
+
+  # ---------- Writer STM -> Pi ----------
+  SensorDet:
+    id: 0x10
+    links: [uart_writer]
+    doc: output of every STM sensor node after filter + hysteresis + debounce
+    fields: {type: u8/EventType, detected: u8, value: f32, conf: u8, t_ms: u32}
+  WheelOdom:
+    id: 0x11
+    links: [uart_writer]
+    doc: STM-integrated wheel odometry, ~50 Hz
+    fields: {x: f32, y: f32, theta: f32, v: f32, w: f32, t_ms: u32}
+  ImuRaw:
+    id: 0x12
+    links: [uart_writer]
+    fields: {ax: f32, ay: f32, az: f32, gx: f32, gy: f32, gz: f32, t_ms: u32}
+
+  # ---------- Pi -> Writer STM ----------
+  MotorCmd:
+    id: 0x20
+    links: [uart_writer]
+    fields: {v: f32, w: f32, t_ms: u32}
+  CalibCmd:
+    id: 0x21
+    links: [uart_writer]
+    fields: {target: u8, op: u8/CalibOp}
+  DropCmd:
+    id: 0x22
+    links: [uart_writer]
+    doc: Beacon Dropper decision -> servo release on STM
+    fields: {slot: u8, beacon_id: u8}
+
+  # ---------- Beacon layer (ESP-NOW) ----------
+  BeaconPayload:
+    id: 0x30
+    links: [espnow, uart_writer, uart_exec, usb_ona]
+    doc: what a beacon stores. Written by Writer (version 0), overwritten by Executor (version+1).
+    fields:
+      id: u8
+      what: u8/EventType
+      prio: u8/Priority
+      conf: u8              # detection confidence 0-255 at write time
+      dir_deg: u16          # bearing to prev beacon, frame W
+      dist_cm: u16          # distance to prev beacon
+      prev_id: u8           # topology: map data
+      next_id: u8           # "next beacons pointer" (0xFF = none yet)
+      age_s: u32            # relative age, counted by the beacon itself (no clock sync)
+      version: u8
+      flags: u8             # bit0 suspect, bit1 verified, bit2 action_done
+  BeaconObs:
+    id: 0x31
+    links: [uart_exec, usb_ona, uart_writer]
+    doc: radio ESP heard a beacon broadcast; forwards it + RSSI to its host
+    include: BeaconPayload
+    fields: {rssi: i8}
+  BeaconAck:
+    id: 0x32
+    links: [espnow, uart_writer, uart_exec]
+    fields: {id: u8, version: u8, ok: u8}
+
+  # ---------- ONA -> Executor (at the entrance, via radio) ----------
+  BriefHeader:
+    id: 0x40
+    links: [usb_ona, espnow, uart_exec]
+    fields: {mission_id: u16, n_steps: u8, t_s: u32}
+  BriefStep:
+    id: 0x41
+    links: [usb_ona, espnow, uart_exec]
+    fields: {mission_id: u16, idx: u8, beacon_id: u8, action: u8/Action, event: u8/EventType}
+
+  # ---------- Executor -> beacons / ONA ----------
+  ActionReport:
+    id: 0x50
+    links: [uart_exec, espnow, usb_ona]
+    fields: {mission_id: u16, beacon_id: u8, action: u8/Action, result: u8/Result, t_s: u32}

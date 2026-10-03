@@ -1,0 +1,10 @@
+# All Living Map node params in one place.
+/**:
+  ros__parameters:
+    port: /dev/ttyAMA0
+stm_bridge:   {ros__parameters: {port: /dev/ttyAMA0, baud: 921600}}
+radio_bridge: {ros__parameters: {port: /dev/ttyUSB0}}
+cv_module:    {ros__parameters: {conf_threshold: 0.5, k: 3, n: 5, fps: 5.0}}
+event_detection: {ros__parameters: {dedupe_radius_m: 2.0}}
+beacon_dropper:  {ros__parameters: {d_max_m: 4.0, rssi_min_dbm: -80, n_beacons: 10}}
+map_processing:  {ros__parameters: {explore_budget_s: 300.0}}
