@@ -1,0 +1,22 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install pyyaml pyserial pytest
+      - name: Generated contracts are committed and up to date
+        run: |
+          make gen
+          git diff --exit-code contracts/generated targets/writer_pi/ros2_ws/src/lm_interfaces/msg
+          untracked=$(git status --porcelain --untracked-files=all contracts/generated targets/writer_pi/ros2_ws/src/lm_interfaces/msg)
+          if [ -n "$untracked" ]; then echo "$untracked"; echo "run make gen and commit"; exit 1; fi
+      - name: Test (gcc/g++ host builds, cross-language checks, sim)
+        run: make test

@@ -4,12 +4,12 @@ IEEE TSYP 14 "Living Map: Spatial Memory for Emergency Robots". P1 = simulation
 (due 05/10/2026). P2 = physical prototype (01/12/2026).
 
 ```
-contracts/   messages.py (typed msgs), topics.py (topic -> type, owner zone), beacon.h (TODO: wire format for firmware)
+contracts/   messages.py (typed msgs), topics.py (topic -> type, owner zone), (wire format for firmware: ../contracts/schema.yaml)
 core/        module.py (Module contract), bus.py (InProcBus; MQTT/serial later), zones.py (spec rules), runner.py (wire + validate + tick)
 modules/     strategy/ writer/ beacon/ ona/ cp/ executor/   — one file per box in the architecture diagram
 sim/         world.py (ground truth; only sim_* drivers may read it), faults.py (TODO)
 config/      wiring.yaml (the graph), scenarios/*.yaml (failure cases, TODO)
-firmware/    writer_esp32/, beacon_esp32c3/  (P2)
+(firmware)   lives in ../targets/ (beacon_fw, lora_gateway, writer_stm, executor_stm); wire format in ../contracts/
 tests/       contract + spec-violation tests
 ```
 
