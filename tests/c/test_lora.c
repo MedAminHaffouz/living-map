@@ -51,6 +51,7 @@ static void grab(uint8_t id, const uint8_t *p, uint8_t len, void *ctx) { (void)c
 static int decode_tx(int i) { lm_decoder_t d; lm_decoder_init(&d); got_n = 0; for (int k = 0; k < txlen[i]; k++) lm_decoder_feed(&d, txlog[i][k], grab, 0); return got_n == 1; }
 
 static const lm_lora_cfg_t CFG = { 433000000, 7, 125000, 5, 20 };
+static const lm_lora_cfg_t DEFAULT_CFG = LM_LORA_CFG_DEFAULT;
 
 /* ---------- tests ---------- */
 static void test_init(void) {
@@ -97,12 +98,14 @@ static void test_airtime(void) {
     uint32_t a = lm_lora_airtime_ms(&CFG, sizeof(lm_beacon_payload_t) + 6);
     printf("airtime BeaconPayload SF7/BW125 = %u ms\n", (unsigned)a);
     CHECK(a >= 40 && a <= 100 && 2 * a < LM_SLOT_MS);
+    CHECK(lm_lora_airtime_ms(&DEFAULT_CFG, sizeof(lm_beacon_payload_t) + 6) == a);   /* what the boards fly */
 }
 
 static void test_slots(void) {
     lm_slots_t s; lm_slots_init(&s);
     CHECK(lm_slot_phase(&s, 12345) == 2345 && lm_slot_current(&s, 12345) == 11);
     CHECK(lm_slot_of_beacon(3) == 3 && lm_slot_of_beacon(27) == 3);
+    CHECK(!lm_slot_reader_window(&s, 4799) && lm_slot_reader_window(&s, 4800) && lm_slot_reader_window(&s, 9999) && !lm_slot_reader_window(&s, 10000));
     lm_slot_sync(&s, 1000, 60, 20000); CHECK(lm_slot_phase(&s, 20000) == 1060);   /* first: jump */
     lm_slot_sync(&s, 1100, 60, 20000); CHECK(lm_slot_phase(&s, 20000) == 1085);   /* then err/4 (100/4) */
     lm_slots_init(&s);

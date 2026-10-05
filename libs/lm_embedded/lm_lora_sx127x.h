@@ -7,6 +7,8 @@
 
 #define LM_LORA_SYNC_WORD 0x4C
 #define LM_LORA_PREAMBLE  8
+/* the one radio config every Living Map node uses (Ra-02 433 MHz); a mismatch = deaf nodes */
+#define LM_LORA_CFG_DEFAULT { 433000000, 7, 125000, 5, 17 }
 
 typedef struct {
     uint8_t  (*spi_xfer)(uint8_t b);   /* full-duplex byte */

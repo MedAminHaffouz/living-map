@@ -2,6 +2,12 @@
 #pragma once
 #include <stdint.h>
 
+#ifdef __cplusplus   /* firmware main.cpp includes this too */
+#define LM_STATIC_ASSERT static_assert
+#else
+#define LM_STATIC_ASSERT _Static_assert
+#endif
+
 typedef enum {
     LM_EVENT_TYPE_NONE = 0,
     LM_EVENT_TYPE_FIRE = 1,
@@ -74,7 +80,7 @@ typedef struct __attribute__((packed)) {
     uint8_t   state;
     uint32_t  t_ms;
 } lm_heartbeat_t;
-_Static_assert(sizeof(lm_heartbeat_t) == 6, "Heartbeat size mismatch");
+LM_STATIC_ASSERT(sizeof(lm_heartbeat_t) == 6, "Heartbeat size mismatch");
 
 /* output of every STM sensor node after filter + hysteresis + debounce */
 typedef struct __attribute__((packed)) {
@@ -84,7 +90,7 @@ typedef struct __attribute__((packed)) {
     uint8_t   conf;
     uint32_t  t_ms;
 } lm_sensor_det_t;
-_Static_assert(sizeof(lm_sensor_det_t) == 11, "SensorDet size mismatch");
+LM_STATIC_ASSERT(sizeof(lm_sensor_det_t) == 11, "SensorDet size mismatch");
 
 /* STM-integrated wheel odometry, ~50 Hz */
 typedef struct __attribute__((packed)) {
@@ -95,7 +101,7 @@ typedef struct __attribute__((packed)) {
     float     w;
     uint32_t  t_ms;
 } lm_wheel_odom_t;
-_Static_assert(sizeof(lm_wheel_odom_t) == 24, "WheelOdom size mismatch");
+LM_STATIC_ASSERT(sizeof(lm_wheel_odom_t) == 24, "WheelOdom size mismatch");
 
 typedef struct __attribute__((packed)) {
     float     ax;
@@ -106,21 +112,21 @@ typedef struct __attribute__((packed)) {
     float     gz;
     uint32_t  t_ms;
 } lm_imu_raw_t;
-_Static_assert(sizeof(lm_imu_raw_t) == 28, "ImuRaw size mismatch");
+LM_STATIC_ASSERT(sizeof(lm_imu_raw_t) == 28, "ImuRaw size mismatch");
 
 typedef struct __attribute__((packed)) {
     float     v;
     float     w;
     uint32_t  t_ms;
 } lm_motor_cmd_t;
-_Static_assert(sizeof(lm_motor_cmd_t) == 12, "MotorCmd size mismatch");
+LM_STATIC_ASSERT(sizeof(lm_motor_cmd_t) == 12, "MotorCmd size mismatch");
 
 /* Beacon Dropper decision -> servo release on STM */
 typedef struct __attribute__((packed)) {
     uint8_t   slot;
     uint8_t   beacon_id;
 } lm_drop_cmd_t;
-_Static_assert(sizeof(lm_drop_cmd_t) == 2, "DropCmd size mismatch");
+LM_STATIC_ASSERT(sizeof(lm_drop_cmd_t) == 2, "DropCmd size mismatch");
 
 /* what a beacon stores. Written by Writer (version 0), overwritten by Executor (version+1). */
 typedef struct __attribute__((packed)) {
@@ -137,7 +143,7 @@ typedef struct __attribute__((packed)) {
     uint8_t   flags;
     uint16_t  phase_ms;
 } lm_beacon_payload_t;
-_Static_assert(sizeof(lm_beacon_payload_t) == 18, "BeaconPayload size mismatch");
+LM_STATIC_ASSERT(sizeof(lm_beacon_payload_t) == 18, "BeaconPayload size mismatch");
 
 /* a LoRa radio heard a beacon broadcast; payload + packet RSSI for its host */
 typedef struct __attribute__((packed)) {
@@ -155,27 +161,27 @@ typedef struct __attribute__((packed)) {
     uint16_t  phase_ms;
     int8_t    rssi;
 } lm_beacon_obs_t;
-_Static_assert(sizeof(lm_beacon_obs_t) == 19, "BeaconObs size mismatch");
+LM_STATIC_ASSERT(sizeof(lm_beacon_obs_t) == 19, "BeaconObs size mismatch");
 
 typedef struct __attribute__((packed)) {
     uint8_t   id;
     uint8_t   version;
     uint8_t   ok;
 } lm_beacon_ack_t;
-_Static_assert(sizeof(lm_beacon_ack_t) == 3, "BeaconAck size mismatch");
+LM_STATIC_ASSERT(sizeof(lm_beacon_ack_t) == 3, "BeaconAck size mismatch");
 
 typedef struct __attribute__((packed)) {
     uint8_t   id;
     uint8_t   src;  /* NodeId */
 } lm_beacon_poll_t;
-_Static_assert(sizeof(lm_beacon_poll_t) == 2, "BeaconPoll size mismatch");
+LM_STATIC_ASSERT(sizeof(lm_beacon_poll_t) == 2, "BeaconPoll size mismatch");
 
 typedef struct __attribute__((packed)) {
     uint16_t  mission_id;
     uint8_t   n_steps;
     uint32_t  t_s;
 } lm_brief_header_t;
-_Static_assert(sizeof(lm_brief_header_t) == 7, "BriefHeader size mismatch");
+LM_STATIC_ASSERT(sizeof(lm_brief_header_t) == 7, "BriefHeader size mismatch");
 
 typedef struct __attribute__((packed)) {
     uint16_t  mission_id;
@@ -184,7 +190,7 @@ typedef struct __attribute__((packed)) {
     uint8_t   action;  /* Action */
     uint8_t   event;  /* EventType */
 } lm_brief_step_t;
-_Static_assert(sizeof(lm_brief_step_t) == 6, "BriefStep size mismatch");
+LM_STATIC_ASSERT(sizeof(lm_brief_step_t) == 6, "BriefStep size mismatch");
 
 typedef struct __attribute__((packed)) {
     uint16_t  mission_id;
@@ -193,5 +199,5 @@ typedef struct __attribute__((packed)) {
     uint8_t   result;  /* Result */
     uint32_t  t_s;
 } lm_action_report_t;
-_Static_assert(sizeof(lm_action_report_t) == 9, "ActionReport size mismatch");
+LM_STATIC_ASSERT(sizeof(lm_action_report_t) == 9, "ActionReport size mismatch");
 

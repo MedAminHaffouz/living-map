@@ -12,8 +12,8 @@ Architecture: [`docs/architecture/`](docs/architecture/) · Wire protocol: [`con
 |---|---|---|
 | Writer · Raspberry Pi (ROS 2) | `targets/writer_pi/` | lidar, SLAM, exploration, CV, event detection, priority decision, beacon dropper/writer |
 | Writer · STM32 | `targets/writer_stm/` | sensor nodes (gas, temp, smoke), encoders → odom, motors, recalibration, dropper servo |
-| Writer / Executor / ONA · ESP32 | `targets/radio_esp/` | ESP-NOW ↔ UART/USB bridge (one firmware, 3 envs) |
-| Beacon · ESP32-C3 | `targets/beacon_esp/` | stores payload, ages itself, broadcasts |
+| Beacon · ESP32-C3 + Ra-02 | `targets/beacon_fw/` | `lm_beacon_core`: stores payload, acks writes, broadcasts in its TDMA slot, NVS restore (SUSPECT) |
+| ONA gateway · ESP32 + Ra-02 | `targets/lora_gateway/` | LoRa ↔ USB bridge: BeaconPayload → BeaconObs + RSSI, PC → air in the reader slot |
 | Executor · STM32 | `targets/executor_stm/` | brief intake, beacon handler, actions taker, fire/first-aid nodes, beacon update |
 | ONA · PC | `targets/ona_pc/` | beacons reader, area knowledge, situation + mission debrief |
 | CP · PC | `targets/cp_pc/` | situation view, mission approval |
@@ -22,25 +22,28 @@ Architecture: [`docs/architecture/`](docs/architecture/) · Wire protocol: [`con
 ```mermaid
 flowchart LR
   subgraph Writer
-    PI[writer_pi · ROS 2] <-- UART --> WSTM[writer_stm]
-    PI <-- USB --> WR[radio_esp:writer]
+    PI[writer_pi · ROS 2] <-- micro-ROS · UART 921600 --> WSTM[writer_stm + Ra-02]
   end
-  WR -- ESP-NOW write --> B[(beacon_esp ×N)]
-  B -- broadcast --> OR[radio_esp:ona]
-  OR <-- USB --> ONA[ona_pc]
-  ONA -- HTTP cellular / sat backup --> CP[cp_pc]
-  CP -- mission --> ONA
-  ONA -- brief via radio --> ER[radio_esp:executor]
+  WSTM -- LoRa write --> B[(beacon_fw ×N)]
+  B <-- LoRa --> B
+  B -- LoRa broadcast --> GW[lora_gateway]
+  subgraph ONA
+    GW <-- USB --> ONAPC[ona_pc]
+  end
+  ONAPC -- HTTP cellular / Iridium SBD backup --> CP[cp_pc]
+  CP -- mission --> ONAPC
+  GW -- LoRa brief --> ESTM
   subgraph Executor
-    ER <-- UART --> ESTM[executor_stm]
+    ESTM[executor_stm + Ra-02 · EX-F / EX-M]
   end
-  B -- broadcast + RSSI --> ER
-  ER -- update v+1 --> B
+  B -- LoRa broadcast + RSSI --> ESTM
+  ESTM -- LoRa update v+1 --> B
+  ESTM -- LoRa ActionReport --> GW
 ```
 
 ## The modularity rules
 1. **One schema, three languages.** Every cross-device message lives in `contracts/schema.yaml`; `make gen` produces the C header, the Python module and the ROS msgs. Nobody hand-writes a struct twice.
-2. **One framing everywhere.** `A5 5A | id | len | payload | crc16` on UART, USB and inside ESP-NOW (`libs/lm_embedded`, `libs/lm_core`).
+2. **One framing everywhere.** `A5 5A | id | len | payload | crc16` on USB and inside LoRa packets (`libs/lm_embedded`, `libs/lm_core`); Pi↔STM is micro-ROS.
 3. **Targets own I/O, libs own logic.** Bridges are the only code touching a port; logic modules never open a serial port.
 4. **Python and C mirrors are tested against each other** (`tests/`): framing, struct layout, aging.
 5. **Spec constraints are structural:** no Writer↔Executor link and no robot↔CP link exist in any target; the sim's runner rejects them at load.
@@ -49,7 +52,7 @@ flowchart LR
 ## Quick start
 ```bash
 pip install pyyaml pyserial pytest
-make test        # 11 repo tests + sim tests (needs gcc for the C checks)
+make test        # repo tests + sim tests (needs gcc/g++ for the C checks)
 make sim         # Phase 1 mission end to end
 ```
 

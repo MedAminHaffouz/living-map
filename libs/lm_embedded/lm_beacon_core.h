@@ -6,6 +6,11 @@
 #include "lm_link_if.h"
 #include "lm_slots.h"
 
+/* BeaconPayload.flags */
+#define LM_BEACON_FLAG_SUSPECT     0x01
+#define LM_BEACON_FLAG_VERIFIED    0x02
+#define LM_BEACON_FLAG_ACTION_DONE 0x04
+
 typedef struct {
     uint8_t id;
     const lm_link_if_t *link;

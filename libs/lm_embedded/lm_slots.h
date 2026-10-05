@@ -14,6 +14,7 @@ typedef struct { int32_t offset_ms; uint8_t synced; } lm_slots_t;
 void     lm_slots_init(lm_slots_t *s);
 uint16_t lm_slot_phase(const lm_slots_t *s, uint32_t now_ms);          /* 0..PERIOD-1 */
 uint8_t  lm_slot_current(const lm_slots_t *s, uint32_t now_ms);        /* 0..COUNT-1 */
+static inline int lm_slot_reader_window(const lm_slots_t *s, uint32_t now_ms) { return lm_slot_current(s, now_ms) == LM_SLOT_READER; }
 static inline uint8_t lm_slot_of_beacon(uint8_t id) { return (uint8_t)(id % LM_SLOT_READER); }
 /* rx_phase = sender's phase when it started sending, airtime = that packet's time on air, now = reception time.
    First call jumps to the sender's phase, later calls correct by err/4 (err wrapped to +-PERIOD/2). */
