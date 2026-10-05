@@ -22,7 +22,6 @@ static void on_msg(uint8_t id, const uint8_t *p, uint8_t n, void *ctx) {
     (void)ctx;
     switch (id) {
     case LM_MSG_MOTOR_CMD: if (n == sizeof(lm_motor_cmd_t)) { const lm_motor_cmd_t *m = (const void *)p; motors_set_cmd(m->v, m->w, board_millis()); } break;
-    case LM_MSG_CALIB_CMD: if (n == sizeof(lm_calib_cmd_t)) calib_handle((const void *)p); break;
     case LM_MSG_DROP_CMD:  if (n == sizeof(lm_drop_cmd_t))  dropper_release(((const lm_drop_cmd_t *)p)->slot); break;
     }
 }

@@ -1,4 +1,4 @@
-"""Beacons reader: radio ESP (usb_ona) -> latest BeaconObs per id (highest version wins) + ActionReports."""
+"""Beacons reader: lora_gateway (usb link) -> latest BeaconObs per id (highest version wins) + ActionReports."""
 from . import _paths  # noqa
 import lm_msgs as M
 from lm_core.link import Decoder

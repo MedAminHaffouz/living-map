@@ -1,6 +1,6 @@
 # Wire protocol (all physical links)
 
-Same framing on UART, USB-serial and inside ESP-NOW packets:
+Same framing on USB-serial and inside LoRa packets (`uros` carries the rosidl structs, see `generated/c/lm_uros_conv.h`):
 
 ```
 | 0xA5 | 0x5A | msg_id u8 | len u8 | payload[len] | crc16 lo | crc16 hi |
@@ -11,11 +11,9 @@ Same framing on UART, USB-serial and inside ESP-NOW packets:
 
 | Link | Ends | Medium | Messages |
 |---|---|---|---|
-| `uart_writer` | Writer STM ↔ Writer Pi | UART 921600 | SensorDet, WheelOdom, ImuRaw ↑ · MotorCmd, CalibCmd, DropCmd ↓ |
-| `uart_writer` | Writer Pi ↔ Writer radio ESP | USB-serial | BeaconPayload ↓ · BeaconObs, BeaconAck ↑ |
-| `espnow` | radio ESPs ↔ beacons | ESP-NOW broadcast | BeaconPayload, BeaconAck, BriefHeader/Step, ActionReport |
-| `uart_exec` | Executor STM ↔ Executor radio ESP | UART | BeaconObs, Brief* ↑ · BeaconPayload, ActionReport ↓ |
-| `usb_ona` | ONA radio ESP ↔ ONA PC | USB-serial | BeaconObs ↑ · Brief* ↓ |
+| `uros` | Writer Pi ↔ Writer STM | micro-ROS over UART 921600 (rosidl structs, not framed) | SensorDet, WheelOdom, ImuRaw, BeaconObs, BeaconAck ↑ · MotorCmd, DropCmd, BeaconPayload ↓ · calib = ROS service |
+| `lora` | Writer STM, Executors, beacons, lora_gateway | LoRa Ra-02 (SX1278, 433 MHz) | BeaconPayload, BeaconAck, BeaconPoll, BriefHeader/Step, ActionReport, Heartbeat |
+| `usb` | lora_gateway ESP32 ↔ ONA PC | USB-serial | BeaconObs, ActionReport ↑ · Brief* ↓ |
 | ONA ↔ CP | ONA PC ↔ CP PC | HTTP/JSON over cellular (sat backup) | situation ↑ · mission ↓ (not framed; JSON) |
 
 Rules: a message ID never changes meaning; add new IDs, don't repurpose. Bump `schema.yaml`, run `make gen`, commit generated files.

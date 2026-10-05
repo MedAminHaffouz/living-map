@@ -2,7 +2,7 @@
 
 | Node | Box | Subscribes | Publishes |
 |---|---|---|---|
-| `stm_bridge` | (link to STM) | `/cmd_vel`, `/stm/calib`, `/stm/drop` | `/stm/sensor_det`, `/wheel/odom`, `/imu/data_raw` |
+| `stm_bridge` | (link to STM) | `/cmd_vel`, `/stm/drop` | `/stm/sensor_det`, `/wheel/odom`, `/imu/data_raw` |
 | `radio_bridge` | (link to radio ESP) | `/beacon/write` | `/beacon/obs` (RSSI), `/beacon/ack` |
 | `rplidar_ros` + `robot_localization` + `slam_toolbox` | SLAM / Localisation | `/scan`, `/wheel/odom`, `/imu/data_raw` | `/map`, TF `map→odom→base_link` |
 | `map_processing` (+ Nav2 + explore_lite) | Exploration + Map Processing | `/map` | `/cmd_vel` (via Nav2), RETURN trigger |

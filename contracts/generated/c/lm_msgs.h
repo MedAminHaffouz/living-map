@@ -60,11 +60,11 @@ typedef enum {
 #define LM_MSG_WHEEL_ODOM 0x11
 #define LM_MSG_IMU_RAW 0x12
 #define LM_MSG_MOTOR_CMD 0x20
-#define LM_MSG_CALIB_CMD 0x21
 #define LM_MSG_DROP_CMD 0x22
 #define LM_MSG_BEACON_PAYLOAD 0x30
 #define LM_MSG_BEACON_OBS 0x31
 #define LM_MSG_BEACON_ACK 0x32
+#define LM_MSG_BEACON_POLL 0x33
 #define LM_MSG_BRIEF_HEADER 0x40
 #define LM_MSG_BRIEF_STEP 0x41
 #define LM_MSG_ACTION_REPORT 0x50
@@ -115,12 +115,6 @@ typedef struct __attribute__((packed)) {
 } lm_motor_cmd_t;
 _Static_assert(sizeof(lm_motor_cmd_t) == 12, "MotorCmd size mismatch");
 
-typedef struct __attribute__((packed)) {
-    uint8_t   target;
-    uint8_t   op;  /* CalibOp */
-} lm_calib_cmd_t;
-_Static_assert(sizeof(lm_calib_cmd_t) == 2, "CalibCmd size mismatch");
-
 /* Beacon Dropper decision -> servo release on STM */
 typedef struct __attribute__((packed)) {
     uint8_t   slot;
@@ -141,10 +135,11 @@ typedef struct __attribute__((packed)) {
     uint32_t  age_s;
     uint8_t   version;
     uint8_t   flags;
+    uint16_t  phase_ms;
 } lm_beacon_payload_t;
-_Static_assert(sizeof(lm_beacon_payload_t) == 16, "BeaconPayload size mismatch");
+_Static_assert(sizeof(lm_beacon_payload_t) == 18, "BeaconPayload size mismatch");
 
-/* radio ESP heard a beacon broadcast; forwards it + RSSI to its host */
+/* a LoRa radio heard a beacon broadcast; payload + packet RSSI for its host */
 typedef struct __attribute__((packed)) {
     uint8_t   id;
     uint8_t   what;  /* EventType */
@@ -157,9 +152,10 @@ typedef struct __attribute__((packed)) {
     uint32_t  age_s;
     uint8_t   version;
     uint8_t   flags;
+    uint16_t  phase_ms;
     int8_t    rssi;
 } lm_beacon_obs_t;
-_Static_assert(sizeof(lm_beacon_obs_t) == 17, "BeaconObs size mismatch");
+_Static_assert(sizeof(lm_beacon_obs_t) == 19, "BeaconObs size mismatch");
 
 typedef struct __attribute__((packed)) {
     uint8_t   id;
@@ -167,6 +163,12 @@ typedef struct __attribute__((packed)) {
     uint8_t   ok;
 } lm_beacon_ack_t;
 _Static_assert(sizeof(lm_beacon_ack_t) == 3, "BeaconAck size mismatch");
+
+typedef struct __attribute__((packed)) {
+    uint8_t   id;
+    uint8_t   src;  /* NodeId */
+} lm_beacon_poll_t;
+_Static_assert(sizeof(lm_beacon_poll_t) == 2, "BeaconPoll size mismatch");
 
 typedef struct __attribute__((packed)) {
     uint16_t  mission_id;

@@ -1,6 +1,6 @@
 """STM <-> Pi bridge. The ONLY node that touches the STM UART.
 Up:   SensorDet -> /stm/sensor_det ; WheelOdom -> /wheel/odom (nav_msgs/Odometry) ; ImuRaw -> /imu/data_raw
-Down: /cmd_vel -> MotorCmd ; /stm/calib -> CalibCmd ; /stm/drop -> DropCmd
+Down: /cmd_vel -> MotorCmd ; /stm/drop -> DropCmd
 Stamps every upstream msg with Pi time on receipt (STM t_ms kept in the payload for latency checks)."""
 from . import _paths  # noqa
 import math, serial, rclpy
@@ -23,7 +23,6 @@ class StmBridge(Node):
         self.p_odom = self.create_publisher(Odometry, "/wheel/odom", 20)
         self.p_imu = self.create_publisher(Imu, "/imu/data_raw", 50)
         self.create_subscription(Twist, "/cmd_vel", self.on_cmd_vel, 10)
-        self.create_subscription(R.CalibCmd, "/stm/calib", lambda m: self.send(from_ros(m, M.CalibCmd)), 10)
         self.create_subscription(R.DropCmd, "/stm/drop", lambda m: self.send(from_ros(m, M.DropCmd)), 10)
         self.create_timer(0.002, self.poll)
 

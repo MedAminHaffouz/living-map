@@ -1,14 +1,14 @@
 # writer_stm — Writer low-level MCU (STM32)
 
 Runs: sensor nodes (gas, temp/fire, smoke), encoders → odometry, motor PID, recalibration, beacon dropper servo.
-Talks to the Pi over UART (`uart_writer` link, see `contracts/PROTOCOL.md`).
+Talks to the Pi over micro-ROS on UART 921600 (`uros` link, see `contracts/PROTOCOL.md`).
 
 | File | Box in diagram | In | Out |
 |---|---|---|---|
 | `sensor_node.c` | Gaz / Temp sensor node | ADC/I²C via `board_read_*` | `SensorDet` → Pi |
 | `odometry.c` | (encoders) | encoder counters | `WheelOdom` → Pi (50 Hz) |
 | `motors.c` | (drive) | `MotorCmd` ← Pi (`/cmd_vel`) | PWM |
-| `calib.c` | recalibration | `CalibCmd` ← Pi | baselines / resets |
+| `calib.c` | recalibration | calib service ← Pi (micro-ROS) | baselines / resets |
 | `dropper.c` | Beacon Dropper actuation | `DropCmd` ← Pi | servo |
 | `app.c` | superloop + UART dispatch | | Heartbeat 1 Hz |
 
