@@ -6,7 +6,8 @@ INC = ["-I", E, "-I", R / "contracts/generated/c"]
 LIB = [E / "lm_link.c", E / "lm_aging.c", R / "tests/c/board_stub.c", R / "tests/c/main_stub.c"]
 LORA = [E / "lm_lora_sx127x.c", E / "lm_slots.c", E / "lm_txq.c"]
 CC = ["gcc", "-std=c11", "-Wall", "-Wextra", "-Werror", "-Wno-unused-parameter"]
-BUILDS = {"writer_stm": ([], []), "executor_stm[EX_FIRE]": (["-DEXECUTOR_TYPE=EX_FIRE"], LORA),
+BUILDS = {"writer_stm": ([], LORA + [R / "tests/c/uplink_stub.c"]),   # uros_app.c (micro-ROS) replaced by the uplink stub
+          "executor_stm[EX_FIRE]": (["-DEXECUTOR_TYPE=EX_FIRE"], LORA),
           "executor_stm[EX_MED]": (["-DEXECUTOR_TYPE=EX_MED"], LORA)}
 
 @pytest.mark.skipif(not shutil.which("gcc"), reason="gcc missing")
@@ -15,7 +16,7 @@ def test_builds_and_runs(tmp_path, build):
     defs, libs = BUILDS[build]
     app = R / "targets" / build.split("[")[0] / "app"
     exe = tmp_path / "fw"
-    subprocess.run([*CC, *defs, *INC, "-I", app, *sorted(app.glob("*.c")), *LIB, *libs, "-lm", "-o", exe], check=True)
+    subprocess.run([*CC, *defs, *INC, "-I", app, *sorted(f for f in app.glob("*.c") if f.name != "uros_app.c"), *LIB, *libs, "-lm", "-o", exe], check=True)
     subprocess.run([exe], check=True, timeout=10)
 
 @pytest.mark.skipif(not shutil.which("gcc"), reason="gcc missing")

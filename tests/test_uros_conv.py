@@ -1,21 +1,13 @@
 """lm_uros_conv.h: every wire struct survives wire -> micro-ROS -> wire, against rosidl-shaped structs built from the .msg files."""
-import pathlib, re, shutil, subprocess, pytest
+import pathlib, shutil, subprocess, sys, pytest
 R = pathlib.Path(__file__).resolve().parents[1]
 GEN = R / "contracts/generated"
-CTYPE = {"uint8": "uint8_t", "int8": "int8_t", "uint16": "uint16_t", "int16": "int16_t",
-         "uint32": "uint32_t", "int32": "int32_t", "float32": "float"}
-
-def snake(n): return re.sub(r"(?<!^)([A-Z])", r"_\1", n).lower()
+sys.path.insert(0, str(R / "tests"))
+from rosidl_fake import headers, snake
 
 def fake_rosidl():
-    """What rosidl_generator_c emits for lm_interfaces/msg/<Name>.h (plain, NOT packed), plus its include guard."""
-    L, names = [], []
-    for f in sorted((GEN / "ros/msg").glob("*.msg")):
-        n = f.stem; names.append(n)
-        flds = [l.split("#")[0].split() for l in f.read_text().splitlines() if l.strip() and not l.startswith("#")]
-        L += [f"#define LM_INTERFACES__MSG__{snake(n).upper()}_H_", "typedef struct {"]
-        L += [f"    {CTYPE[t]} {name};" for t, name in flds] + [f"}} lm_interfaces__msg__{n};", ""]
-    return "\n".join(L), names
+    """What rosidl_generator_c emits for every lm_interfaces/msg/<Name>.h, concatenated."""
+    h = headers(); return "\n".join(h.values()), list(h)
 
 @pytest.mark.skipif(not shutil.which("gcc"), reason="gcc missing")
 def test_roundtrip_all_messages(tmp_path):

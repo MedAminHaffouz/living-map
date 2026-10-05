@@ -1,0 +1,5 @@
+# Writer STM recalibration (served by targets/writer_stm/app/uros_app.c on /stm/calibrate).
+uint8 target   # ZERO_BASELINE: sensor EventType (GAS / SMOKE); otherwise 0
+uint8 op       # CalibOp: 1 ZERO_BASELINE (clean air at entrance), 2 IMU_BIAS (robot still), 3 ENCODER_RESET (at B0)
+---
+bool ok
