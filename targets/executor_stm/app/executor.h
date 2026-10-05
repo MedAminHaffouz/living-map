@@ -1,9 +1,17 @@
-/* Executor (STM32 + radio ESP32 on UART). Boxes: Brief Intake, Beacon Handler, Actions Taker,
-   Fire Action Node, First Aid Node, Beacon Update. Same superloop pattern as writer_stm. */
+/* Executor (STM32F103 + Ra-02 on SPI, no ROS). Boxes: Brief Intake, Beacon Handler, Actions Taker,
+   Fire Action Node / First Aid Node, Beacon Update. Same superloop pattern as writer_stm.
+   One firmware, two robots: -DEXECUTOR_TYPE=EX_FIRE (EX-F, extinguisher) or EX_MED (EX-M, first-aid kits). */
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
 #include "lm_msgs.h"
+#include "lm_lora_sx127x.h"
+
+#define EX_FIRE 1
+#define EX_MED  2
+#if !defined(EXECUTOR_TYPE) || (EXECUTOR_TYPE != EX_FIRE && EXECUTOR_TYPE != EX_MED)
+#error "build with -DEXECUTOR_TYPE=EX_FIRE or -DEXECUTOR_TYPE=EX_MED"
+#endif
 
 /* ---- Brief Intake: BriefHeader + N BriefStep from ONA (via radio, at the entrance) ---- */
 #define EX_MAX_STEPS 16
@@ -33,10 +41,17 @@ typedef struct {
     act_status_t (*tick)(uint32_t now_ms);                 /* hard timeout inside */
     int          (*verify)(void);                          /* own sensors confirm effect */
 } actuator_node_t;
-extern const actuator_node_t FIRE_ACTION_NODE, FIRST_AID_NODE;
+extern const actuator_node_t FIRE_ACTION_NODE, FIRST_AID_NODE;   /* only the one matching EXECUTOR_TYPE is built */
+const actuator_node_t *ex_actuator(void);                          /* this robot's one capability */
 
 /* ---- Beacon Update: "with confirm" -> overwrite beacon (version+1), report to ONA ---- */
 void beacon_update_send(const beacon_entry_t *e, uint8_t new_flags, uint8_t action, uint8_t result, uint16_t mission_id, uint32_t now_ms);
+/* ActionReport only, beacon left untouched (step not attempted) */
+void action_report_send(uint8_t beacon_id, uint8_t action, uint8_t result, uint16_t mission_id, uint32_t now_ms);
+
+/* ---- Radio: everything goes out through an 8-entry queue, sent only in the TDMA reader window ---- */
+#define EX_TXQ 8
+int ex_tx(uint8_t id, const void *p, uint8_t n);   /* 0 = queued, -1 = queue full (dropped) */
 
 /* ---- Navigation between beacons (RSSI homing + local avoidance) ---- */
 typedef enum { NAV_RUNNING, NAV_ARRIVED, NAV_LOST } nav_status_t;
@@ -44,9 +59,9 @@ nav_status_t nav_to_beacon(const beacon_table_t *t, uint8_t target_id, uint32_t 
 
 /* ---- board glue (implement in board.c) ---- */
 uint32_t board_millis(void);
-void     board_uart_write(const uint8_t *d, size_t n);
-void     board_pump(int on);
-void     board_kit_servo_release(void);
-int      board_kit_bay_empty(void);
+const lm_lora_board_t *board_lora(void);          /* Ra-02: spi_xfer, nss, reset, dio0, millis */
+void     board_pump(int on);                      /* EX-F only */
+void     board_kit_servo_release(void);            /* EX-M only */
+int      board_kit_bay_empty(void);                /* EX-M only */
 float    board_read_temp_c(void);
 void     board_drive(float v, float w);

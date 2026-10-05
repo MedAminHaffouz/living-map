@@ -1,6 +1,7 @@
 # Area Knowledge (static, set before the mission)
 entrance: {lat: 36.8430, lon: 10.1970}   # GPS fix at B0
 heading_deg: 30.0                         # bearing of Writer's x-axis at entry, from East CCW (compass + offset)
-cp_url: http://cp.local:8080              # cellular link; sat backup = TODO
-radio_port: /dev/ttyUSB0
+cp_url: http://cp.local:8080              # primary: HTTP over cellular
+sat_port: /dev/ttyUSB1                    # backup: Iridium SBD modem (driver TODO)
+gateway_port: /dev/ttyUSB0                # targets/lora_gateway on USB
 notes: "building plan / known exits / hazards known before entry"

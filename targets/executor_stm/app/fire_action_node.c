@@ -1,4 +1,5 @@
 #include "executor.h"
+#if EXECUTOR_TYPE == EX_FIRE
 /* Fire Action Node: pump bursts, hard timeout on the STM side (pump never left on). */
 #define BURST_MS 2000
 static uint32_t t0, left_ms = 20000;   /* extinguisher capacity, TODO measure */
@@ -10,3 +11,4 @@ static act_status_t tick(uint32_t now) {
 }
 static int verify(void) { return board_read_temp_c() < 45.f; }   /* fire out? */
 const actuator_node_t FIRE_ACTION_NODE = { LM_ACTION_EXTINGUISH, precond, start, tick, verify };
+#endif

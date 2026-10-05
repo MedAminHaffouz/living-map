@@ -1,9 +1,9 @@
-"""Beacon Writer: /writer/priority_events + /writer/dropped -> /beacon/write (BeaconPayload via radio_bridge).
+"""Beacon Writer: /writer/priority_events + /writer/dropped -> /beacon/write (BeaconPayload, sent over LoRa by the Writer STM).
 - every dropped beacon gets a payload (JUNCTION if no event): WHERE = (dir, dist) to previous beacon
 - event with priority > IGNORE near no beacon -> /writer/drop_request, payload attached to the new beacon
 - IMMEDIATE -> rewrite previous beacon (version+1) with the event
-- retries until /beacon/ack (TODO)."""
-from . import _paths  # noqa
+- the STM retries each write until the beacon acks; /beacon/ack carries the outcome (ok=0 after 3 retries).
+  TODO: re-queue or re-drop on ok=0."""
 import math, rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PointStamped

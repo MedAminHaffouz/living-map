@@ -13,7 +13,7 @@ import cp_server
 AREA = {"entrance": {"lat": 36.843, "lon": 10.197}, "heading_deg": 0.0}
 
 def obs(i, prev, d, dist, what=4, ver=0, age=5):
-    return encode(M.BeaconObs.ID, M.BeaconObs(i, what, 2, 230, d, dist, prev, 255, age, ver, 0, -60).pack())
+    return encode(M.BeaconObs.ID, M.BeaconObs(i, what, 2, 230, d, dist, prev, 255, age, ver, 0, 0, -60).pack())
 
 def test_situation_from_beacon_chain():
     stream = io.BytesIO(obs(0, 0, 0, 0) + obs(1, 0, 180, 400) + obs(2, 1, 180, 300, what=1) + obs(2, 1, 180, 300, what=1, ver=1, age=500))

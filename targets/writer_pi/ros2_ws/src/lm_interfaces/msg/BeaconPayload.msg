@@ -11,3 +11,4 @@ uint8 next_id
 uint32 age_s
 uint8 version
 uint8 flags
+uint16 phase_ms

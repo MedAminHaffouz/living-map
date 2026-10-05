@@ -1,10 +1,17 @@
 #include "executor.h"
 #include "lm_aging.h"
 /* Per step: NAVIGATE to beacon -> (stale? VERIFY) -> ACT via actuator node -> REPORT (Beacon Update) -> next.
-   Trust by age: FRESH/AGING act directly, STALE verify first, SUSPECT skip + report. */
-static const actuator_node_t *node_for(uint8_t action) {
-    switch (action) { case LM_ACTION_EXTINGUISH: return &FIRE_ACTION_NODE; case LM_ACTION_FIRST_AID: return &FIRST_AID_NODE; default: return 0; }
+   Trust by age: FRESH/AGING act directly, STALE verify first, SUSPECT skip + report.
+   A step needing a capability this robot doesn't have (EX-F given FIRST_AID, ...) is reported ABORTED, not attempted. */
+const actuator_node_t *ex_actuator(void) {
+#if EXECUTOR_TYPE == EX_FIRE
+    return &FIRE_ACTION_NODE;
+#else
+    return &FIRST_AID_NODE;
+#endif
 }
+static const actuator_node_t *node_for(uint8_t action) { return ex_actuator()->action == action ? ex_actuator() : 0; }
+static int needs_actuator(uint8_t action) { return action == LM_ACTION_EXTINGUISH || action == LM_ACTION_FIRST_AID; }
 static void go(actions_t *a, ex_state_t s, uint32_t now) { a->st = s; a->t_state = now; }
 
 void actions_tick(actions_t *a, brief_t *b, beacon_table_t *t, uint32_t now) {
@@ -14,6 +21,9 @@ void actions_tick(actions_t *a, brief_t *b, beacon_table_t *t, uint32_t now) {
     const lm_brief_step_t *s = &b->step[a->idx];
     const beacon_entry_t *e = beacon_get(t, s->beacon_id);
     const actuator_node_t *n = node_for(s->action);
+    if (a->st == EX_NAVIGATE && needs_actuator(s->action) && !n) {           /* not ours: don't even drive there */
+        action_report_send(s->beacon_id, s->action, LM_RESULT_ABORTED, b->mission_id, now); a->idx++; return;
+    }
     switch (a->st) {
     case EX_NAVIGATE: {
         nav_status_t ns = nav_to_beacon(t, s->beacon_id, now);

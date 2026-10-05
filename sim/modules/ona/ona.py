@@ -8,9 +8,9 @@ Outputs: Translate: cp/situation -> GeoEvent (to CP). BriefOut: executor/brief -
 Active in: always (no ACTIVE_IN on either class).
 Params read from config/wiring.yaml: Translate: heading_deg (entrance heading, deg,
 required), entrance_lat (deg, required), entrance_lon (deg, required). BriefOut: none.
-P1 status: Translate converts each MissionLog's Events (frame W, asserted) to WGS84 via
-a fixed-heading rotation into ENU then a flat-earth equirectangular projection (accurate
-under ~1 km); every translated event starts at Age.FRESH. "Carry" (to a far Command
+P1 status: Translate converts each MissionLog's Events (frame W, asserted) to WGS84 with
+libs/lm_core/frame.w_to_wgs84, the same function the real ONA uses (fixed-heading rotation
+into ENU, then flat-earth projection, accurate under ~1 km); every translated event starts at Age.FRESH. "Carry" (to a far Command
 Post) is modeled as the cp/situation topic hop, not a real transport. BriefOut is a pure
 pass-through of cp/plan to executor/brief.
 P2 plan: same math, but Translate reads a real exit pose/heading instead of a static
@@ -19,7 +19,10 @@ physical Command Post. Topics/types unchanged.
 TODOs:
     - TODO: heading_deg is a fixed param; P2 should derive heading from the Writer's own exit pose.
 """
-import math
+import sys, pathlib
+_LIBS = pathlib.Path(__file__).resolve().parents[3] / "libs"     # repo libs/: one frame math for sim and ONA
+if str(_LIBS) not in sys.path: sys.path.insert(0, str(_LIBS))
+from lm_core.frame import w_to_wgs84
 from core.module import Module
 from core.zones import Zone
 from contracts.messages import GeoEvent, Frame, Age
@@ -28,11 +31,8 @@ class Translate(Module):
     """Receive + Translate + Carry. W -> ENU (heading psi, origin = entrance) -> WGS84 (flat-earth, fine < 1 km)."""
     ZONE = Zone.ONA; INPUTS = ("ona/upload",); OUTPUTS = ("cp/situation",)
     def to_wgs84(self, x, y):
-        """Rotate a frame-W point (x, y) (m) by heading_deg into ENU, then flat-earth project to (lat, lon) (deg)."""
-        psi = math.radians(self.p["heading_deg"])
-        e = math.cos(psi) * x - math.sin(psi) * y; n = math.sin(psi) * x + math.cos(psi) * y
-        lat0, lon0 = self.p["entrance_lat"], self.p["entrance_lon"]
-        return lat0 + n / 111_320, lon0 + e / (111_320 * math.cos(math.radians(lat0)))
+        """Frame-W point (x, y) (m) -> (lat, lon) (deg), via lm_core.frame.w_to_wgs84."""
+        return w_to_wgs84(x, y, self.p["heading_deg"], self.p["entrance_lat"], self.p["entrance_lon"])
     def step(self, t, inbox):
         """Translate every Event in each uploaded MissionLog to a fresh GeoEvent."""
         out = []

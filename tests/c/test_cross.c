@@ -13,8 +13,8 @@ static void on_msg(uint8_t id, const uint8_t *p, uint8_t len, void *ctx) {
         printf("SensorDet type=%u detected=%u value=%.1f conf=%u t_ms=%u\n", m.type, m.detected, m.value, m.conf, m.t_ms);
     } else if (id == LM_MSG_BEACON_PAYLOAD && len == sizeof(lm_beacon_payload_t)) {
         lm_beacon_payload_t m; memcpy(&m, p, len);
-        printf("BeaconPayload id=%u what=%u prio=%u dir=%u dist=%u age=%u ver=%u state=%u\n",
-               m.id, m.what, m.prio, m.dir_deg, m.dist_cm, m.age_s, m.version,
+        printf("BeaconPayload id=%u what=%u prio=%u dir=%u dist=%u age=%u ver=%u phase=%u state=%u\n",
+               m.id, m.what, m.prio, m.dir_deg, m.dist_cm, m.age_s, m.version, m.phase_ms,
                lm_age_state(m.conf / 255.f, m.age_s, m.what, m.flags));
     } else printf("unknown id=0x%02X len=%u\n", id, len);
 }

@@ -121,17 +121,6 @@ class MotorCmd:
     def unpack(cls, b: bytes): return cls(*struct.unpack(cls.FMT, b))
 
 @dataclass
-class CalibCmd:
-    target: int = 0
-    op: int = 0
-    ID = 0x21
-    FMT = '<BB'
-    SIZE = struct.calcsize(FMT)
-    def pack(self) -> bytes: return struct.pack(self.FMT, *astuple(self))
-    @classmethod
-    def unpack(cls, b: bytes): return cls(*struct.unpack(cls.FMT, b))
-
-@dataclass
 class DropCmd:
     """Beacon Dropper decision -> servo release on STM"""
     slot: int = 0
@@ -157,8 +146,9 @@ class BeaconPayload:
     age_s: int = 0
     version: int = 0
     flags: int = 0
+    phase_ms: int = 0
     ID = 0x30
-    FMT = '<BBBBHHBBIBB'
+    FMT = '<BBBBHHBBIBBH'
     SIZE = struct.calcsize(FMT)
     def pack(self) -> bytes: return struct.pack(self.FMT, *astuple(self))
     @classmethod
@@ -166,7 +156,7 @@ class BeaconPayload:
 
 @dataclass
 class BeaconObs:
-    """radio ESP heard a beacon broadcast; forwards it + RSSI to its host"""
+    """a LoRa radio heard a beacon broadcast; payload + packet RSSI for its host"""
     id: int = 0
     what: int = 0
     prio: int = 0
@@ -178,9 +168,10 @@ class BeaconObs:
     age_s: int = 0
     version: int = 0
     flags: int = 0
+    phase_ms: int = 0
     rssi: int = 0
     ID = 0x31
-    FMT = '<BBBBHHBBIBBb'
+    FMT = '<BBBBHHBBIBBHb'
     SIZE = struct.calcsize(FMT)
     def pack(self) -> bytes: return struct.pack(self.FMT, *astuple(self))
     @classmethod
@@ -193,6 +184,17 @@ class BeaconAck:
     ok: int = 0
     ID = 0x32
     FMT = '<BBB'
+    SIZE = struct.calcsize(FMT)
+    def pack(self) -> bytes: return struct.pack(self.FMT, *astuple(self))
+    @classmethod
+    def unpack(cls, b: bytes): return cls(*struct.unpack(cls.FMT, b))
+
+@dataclass
+class BeaconPoll:
+    id: int = 0
+    src: int = 0
+    ID = 0x33
+    FMT = '<BB'
     SIZE = struct.calcsize(FMT)
     def pack(self) -> bytes: return struct.pack(self.FMT, *astuple(self))
     @classmethod
@@ -238,4 +240,4 @@ class ActionReport:
     @classmethod
     def unpack(cls, b: bytes): return cls(*struct.unpack(cls.FMT, b))
 
-BY_ID = {0x01: Heartbeat, 0x10: SensorDet, 0x11: WheelOdom, 0x12: ImuRaw, 0x20: MotorCmd, 0x21: CalibCmd, 0x22: DropCmd, 0x30: BeaconPayload, 0x31: BeaconObs, 0x32: BeaconAck, 0x40: BriefHeader, 0x41: BriefStep, 0x50: ActionReport}
+BY_ID = {0x01: Heartbeat, 0x10: SensorDet, 0x11: WheelOdom, 0x12: ImuRaw, 0x20: MotorCmd, 0x22: DropCmd, 0x30: BeaconPayload, 0x31: BeaconObs, 0x32: BeaconAck, 0x33: BeaconPoll, 0x40: BriefHeader, 0x41: BriefStep, 0x50: ActionReport}
