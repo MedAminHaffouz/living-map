@@ -42,6 +42,8 @@ newer knowledge wins everywhere.
 | Executor EX-F (fire) | STM32F103 + Ra-02 + extinguisher pump | follows the beacons, extinguishes, updates beacons | beacons, ONA (LoRa) |
 | Executor EX-M (first aid) | STM32F103 + Ra-02 + kit servo | follows the beacons, delivers a first-aid kit, updates beacons | beacons, ONA (LoRa) |
 
+![Living Map architecture: Writer robot, beacon layer, ONA, Command Post and Executor robot](architecture.png)
+
 ### A mission, start to finish
 1. The **Writer** enters. At startup it calibrates the STM (encoders reset so the map origin is the entrance, gas
    and smoke baselines, IMU bias) and drops **B0**.
