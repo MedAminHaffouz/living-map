@@ -10,7 +10,7 @@ WARN = ["-Wall", "-Wextra", "-Werror"]
 def test_gateway_logic(tmp_path):
     exe = tmp_path / "gw"
     subprocess.run(["gcc", "-std=c11", *WARN, *INC, "-I", GW, R / "tests/c/test_gateway.c", GW / "gateway.c",
-                    E / "lm_link.c", E / "lm_lora_sx127x.c", E / "lm_slots.c", "-o", exe], check=True)
+                    E / "lm_link.c", E / "lm_lora_sx127x.c", E / "lm_slots.c", E / "lm_txq.c", "-o", exe], check=True)
     r = subprocess.run([exe], capture_output=True, text=True, timeout=10)
     assert r.returncode == 0 and "ALL OK" in r.stdout, r.stdout
 
@@ -28,4 +28,4 @@ def test_build_src_filter_points_at_real_files():
             line = line.strip()
             if line.startswith("+<../"):
                 assert (ini.parent / "src" / line[2:-1]).resolve().is_file(), (ini, line); seen += 1
-    assert seen >= 8   # beacon_fw 4 + lora_gateway 4
+    assert seen >= 9   # beacon_fw 4 + lora_gateway 5

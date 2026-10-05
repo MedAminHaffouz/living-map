@@ -6,16 +6,16 @@
 #include "lm_link_if.h"
 #include "lm_lora_sx127x.h"
 #include "lm_slots.h"
+#include "lm_txq.h"
 
 #define GW_QUEUE 16
 
-typedef struct { uint8_t id, len; uint8_t p[LM_MAX_PAYLOAD]; } gw_msg_t;
 typedef struct {
     const lm_link_if_t *air, *host;
     const lm_lora_cfg_t *radio;
     lm_slots_t slots;
-    gw_msg_t q[GW_QUEUE]; uint8_t head, n;
-    uint32_t dropped, now;
+    lm_txq_msg_t qbuf[GW_QUEUE]; lm_txq_t txq;
+    uint32_t now;
 } gateway_t;
 
 void gateway_init(gateway_t *g, const lm_link_if_t *air, const lm_link_if_t *host, const lm_lora_cfg_t *radio);
