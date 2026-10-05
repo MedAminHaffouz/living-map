@@ -1,9 +1,6 @@
 # All Living Map node params in one place.
-/**:
-  ros__parameters:
-    port: /dev/ttyAMA0
-stm_bridge:   {ros__parameters: {port: /dev/ttyAMA0, baud: 921600}}
-radio_bridge: {ros__parameters: {port: /dev/ttyUSB0}}
+# The STM serial port (/dev/ttyAMA0, 921600) is an argument of the micro_ros_agent Node in writer.launch.py.
+stm_adapter:  {ros__parameters: {odom_var_xy: 0.01, odom_var_theta: 0.03}}   # TODO: measure on the floor
 cv_module:    {ros__parameters: {conf_threshold: 0.5, k: 3, n: 5, fps: 5.0}}
 event_detection: {ros__parameters: {dedupe_radius_m: 2.0}}
 beacon_dropper:  {ros__parameters: {d_max_m: 4.0, rssi_min_dbm: -80, n_beacons: 10}}
